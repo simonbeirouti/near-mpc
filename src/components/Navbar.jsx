@@ -1,8 +1,24 @@
+import {forwardRef} from "react";
 import {useNearStore} from "../store";
-import {Link} from "react-router-dom";
+import {Link, useLocation} from "react-router-dom";
 import {Button} from "@/components/ui/button";
-import {Home} from "lucide-react";
-import {routes} from "../App"; // Import the routes
+import {
+	NavigationMenu,
+	NavigationMenuContent,
+	NavigationMenuItem,
+	NavigationMenuLink,
+	NavigationMenuList,
+	NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
+import {routes} from "../App";
+import {Home, LogOut, LogIn,ChevronDownIcon} from "lucide-react";
+import {cn} from "@/lib/utils";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const Navbar = () => {
 	const {wallet, signedAccountId} = useNearStore();
@@ -15,44 +31,88 @@ const Navbar = () => {
 		wallet.signOut();
 	};
 
+	const location = useLocation();
+	const currentPath = location.pathname.replace(/^\//, "");
+
 	return (
 		<nav className="flex flex-row justify-between items-center w-screen p-2 z-10">
 			<Link to="/">
-				<Button variant="outline" size="icon">
+				<Button variant="outline">
 					<Home className="h-4 w-4" />
 				</Button>
 			</Link>
-			<div className="flex items-center space-x-4">
-				{routes
-					.filter(route => route.path !== "/" && (!route.auth || signedAccountId))
-					.map((route) => (
-						<Link key={route.path} to={route.path} className="hover:underline">
-							{route.label}
-						</Link>
-					))}
+			<div className="flex flex-grow justify-end items-center">
+				<NavigationMenu>
+					<NavigationMenuList className="mr-2">
+						{routes
+							.filter(
+								(route) =>
+									route.path !== "/" &&
+									(!route.auth || signedAccountId)
+							)
+							.map((route) => (
+								<NavigationMenuItem className="flex items-center" key={route.path}>
+									{route.children ? (
+										<>
+											<NavigationMenuTrigger className="flex items-center border-b md:border-none border-gray-600 shadow-xl md:shadow-none">
+												<span className="hidden md:inline">{route.label}</span>
+												<span className="md:hidden">{route.icon}</span>
+											</NavigationMenuTrigger>
+											<NavigationMenuContent>
+												<div className="grid gap-2 p-2 text-center w-[200px] md:w-[300px] bg-red-100">
+													{route.children.map(
+														(child, index) => (
+															<ListItem
+																className={`w-full ${index === 0 && route.children.length % 2 !== 0 ? 'col-span-2' : ''}`}
+																key={child.path}
+																title={child.label}
+																href={child.path}
+															>
+																{child.description}
+															</ListItem>
+														)
+													)}
+												</div>
+											</NavigationMenuContent>
+										</>
+									) : (
+										<Link to={route.path}>
+											<NavigationMenuItem className={`block select-none rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground ${currentPath === route.path ? 'bg-accent text-accent-foreground' : ''}`}>
+												<span className="hidden md:inline">{route.label}</span>
+												{route.icon && (
+													<TooltipProvider>
+														<Tooltip>
+															<TooltipTrigger asChild>
+																<span className="md:hidden">{route.icon}</span>
+															</TooltipTrigger>
+															<TooltipContent>
+																<p>{route.label}</p>
+															</TooltipContent>
+														</Tooltip>
+													</TooltipProvider>
+												)}
+											</NavigationMenuItem>
+										</Link>
+									)}
+								</NavigationMenuItem>
+							))}
+					</NavigationMenuList>
+				</NavigationMenu>
+			</div>
+			<div className="flex justify-end items-center">
 				{signedAccountId ? (
 					<Button
 						onClick={signOut}
-						className="bg-green-600 hover:bg-green-400 text-white font-bold py-2 px-4 rounded shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
-						style={{
-							boxShadow: '0 0 10px #4ade80, 0 0 20px #4ade80, 0 0 30px #4ade80',
-							textShadow: '0 0 5px #4ade80'
-						}}
+						className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded shadow-lg transition-all duration-300 ease-in-out transform hover:scale-50"
 					>
-            Online
-            {/* {signedAccountId.slice(0, 4)}...
-						{signedAccountId.slice(-4)} */}
+						<LogOut className="h-4 w-4" />
 					</Button>
 				) : (
 					<Button
 						onClick={signIn}
-						className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
-						style={{
-							boxShadow: '0 0 10px #ef4444, 0 0 20px #ef4444, 0 0 30px #ef4444',
-							textShadow: '0 0 5px #ef4444'
-						}}
+						className="bg-green-600 hover:bg-green-400 text-white font-bold py-2 px-4 rounded shadow-lg transition-all duration-300 ease-in-out transform hover:scale-50"
 					>
-						Login
+						<LogIn className="h-4 w-4" />
 					</Button>
 				)}
 			</div>
@@ -62,13 +122,25 @@ const Navbar = () => {
 
 export default Navbar;
 
-// Named: akjsfhkajhsdasd.testnet
-// Implicit Account ID: e4910e3af3f8affeeb1024ffbf19c85ffac4a289f456bcf4336718e332a36ef3
-// Public Key: ed25519:GPEF6QWAvL4Rere1h7uX4i55pqs6SDY3zKLWF65i1Myc
-// SECRET KEYPAIR: ed25519:BG44T6pge7Z9LUsCSDitcovCKesG87EfP3SxgeAJCKWnpCHPm7dMQJfR3HHHRSbyqX96W9zhrPPt1o7j5SKJwgW
-
-// Master Seed Phrase: endorse pelican despair mutual diagram raccoon narrow bounce start tray biology exclude
-// Seed Phrase HD Path: m/44'/397'/0'
-// Implicit Account ID: f94f8a9a41d33cf155bfc3c4e840184ed2a319bdf29f5737410ea16a0f371924
-// Public Key: ed25519:HnCs64iUNsA96VgRpr2b2bhDkMutnTNTPXyR18Xhns1M
-// SECRET KEYPAIR: ed25519:4ppa5Kue6RhvZnyabWL4azUJT6FyNTwrTvw5Mb3j6m5xYwFi6zRqqk9932HdnzksZUubvK9813ZtHSmjjp3VuTRm
+const ListItem = forwardRef(({className, title, children, ...props}, ref) => {
+	return (
+			<NavigationMenuLink asChild>
+				<a
+					ref={ref}
+					className={cn(
+						"block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+						className
+					)}
+					{...props}
+				>
+					<div className="text-sm font-medium leading-none">
+						{title}
+					</div>
+					<p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+						{children}
+					</p>
+				</a>
+			</NavigationMenuLink>
+	);
+});
+ListItem.displayName = "ListItem";
