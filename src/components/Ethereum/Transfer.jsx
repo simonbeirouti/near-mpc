@@ -3,9 +3,11 @@ import { useState } from "react";
 import PropTypes from 'prop-types';
 import { forwardRef } from "react";
 import { useImperativeHandle } from "react";
+import { Label } from "../ui/label";
+import { Input } from "../ui/input";
 
 export const TransferForm = forwardRef(({ props: { Eth, senderAddress, loading } }, ref) => {
-  const [receiver, setReceiver] = useState("0xe0f3B7e68151E9306727104973752A415c2bcbEb");
+  const [receiver, setReceiver] = useState("");
   const [amount, setAmount] = useState(0.005);
 
   useImperativeHandle(ref, () => ({
@@ -18,17 +20,32 @@ export const TransferForm = forwardRef(({ props: { Eth, senderAddress, loading }
 
   return (
     <>
-      <div className="row mb-3">
-        <label className="col-sm-2 col-form-label col-form-label-sm">To:</label>
-        <div className="col-sm-10">
-          <input type="text" className="form-control form-control-sm" value={receiver} onChange={(e) => setReceiver(e.target.value)} disabled={loading} />
+      <div className="mb-4">
+        <Label className="block text-sm font-medium text-gray-700 mb-1">To:</Label>
+        <div className="mt-1">
+          <Input 
+            type="text" 
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" 
+            value={receiver} 
+            onChange={(e) => setReceiver(e.target.value)} 
+            disabled={loading} 
+          />
         </div>
       </div>
-      <div className="row mb-3">
-        <label className="col-sm-2 col-form-label col-form-label-sm">Amount:</label>
-        <div className="col-sm-10">
-          <input type="number" className="form-control form-control-sm" value={amount} onChange={(e) => setAmount(e.target.value)} step="0.01" disabled={loading} />
-          <div className="form-text"> Ethereum units </div>
+      <div className="mb-4">
+        <Label className="block text-sm font-medium text-gray-700 mb-1">Amount:</Label>
+        <div className="mt-1 relative rounded-md shadow-sm">
+          <Input 
+            type="number" 
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" 
+            value={amount} 
+            onChange={(e) => setAmount(e.target.value)} 
+            step="0.001" 
+            disabled={loading} 
+          />
+          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+            <span className="text-gray-500 sm:text-sm mr-4">Ethereum units</span>
+          </div>
         </div>
       </div>
     </>

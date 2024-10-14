@@ -84,34 +84,71 @@ export function BitcoinView({ props: { setStatus, MPC_CONTRACT } }) {
   }
 
   return (
-    <>
-      <div className="row my-3">
-        <label className="col-sm-2 col-form-label col-form-label-sm">Path:</label>
-        <div className="col-sm-10">
-          <input type="text" className="form-control form-control-sm" value={derivation} onChange={(e) => setDerivation(e.target.value)} disabled={loading} />
-          <div className="form-text" id="eth-sender"> {senderAddress} </div>
+    <div className="space-y-4">
+      <div className="flex items-center">
+        <label className="w-1/5 text-sm font-medium">Path:</label>
+        <div className="w-4/5">
+          <input
+            type="text"
+            className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={derivation}
+            onChange={(e) => setDerivation(e.target.value)}
+            disabled={loading}
+          />
+          <div className="mt-1 text-sm text-gray-600" id="eth-sender">
+            {senderAddress}
+          </div>
         </div>
       </div>
-      <div className="row mb-3">
-        <label className="col-sm-2 col-form-label col-form-label-sm">To:</label>
-        <div className="col-sm-10">
-          <input type="text" className="form-control form-control-sm" value={receiver} onChange={(e) => setReceiver(e.target.value)} disabled={loading} />
+      <div className="flex items-center">
+        <label className="w-1/5 text-sm font-medium">To:</label>
+        <div className="w-4/5">
+          <input
+            type="text"
+            className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={receiver}
+            onChange={(e) => setReceiver(e.target.value)}
+            disabled={loading}
+          />
         </div>
       </div>
-      <div className="row mb-3">
-        <label className="col-sm-2 col-form-label col-form-label-sm">Amount:</label>
-        <div className="col-sm-10">
-          <input type="number" className="form-control form-control-sm" value={amount} onChange={(e) => setAmount(e.target.value)} step="1" disabled={loading} />
-          <div className="form-text"> satoshi units </div>
+      <div className="flex items-center">
+        <label className="w-1/5 text-sm font-medium">Amount:</label>
+        <div className="w-4/5">
+          <input
+            type="number"
+            className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            step="1"
+            disabled={loading}
+          />
+          <div className="mt-1 text-sm text-gray-600">satoshi units</div>
         </div>
       </div>
 
-      <div className="text-center mt-3">
-        {step === 'request' && <button className="btn btn-primary text-center" onClick={UIChainSignature} disabled={loading}> Request Signature </button>}
-        {step === 'relay' && <button className="btn btn-success text-center" onClick={relayTransaction} disabled={loading}> Relay Transaction </button>}
+      <div className="text-center mt-6">
+        {step === 'request' && (
+          <button
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+            onClick={UIChainSignature}
+            disabled={loading}
+          >
+            Request Signature
+          </button>
+        )}
+        {step === 'relay' && (
+          <button
+            className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
+            onClick={relayTransaction}
+            disabled={loading}
+          >
+            Relay Transaction
+          </button>
+        )}
       </div>
-    </>
-  )
+    </div>
+  );
 }
 
 BitcoinView.propTypes = {
