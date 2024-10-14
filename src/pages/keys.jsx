@@ -1,15 +1,10 @@
 import React, {useState, useEffect} from "react";
-import {revokeAccessKey} from "@/lib/nearUtils";
+import {revokeAccessKey, generateAccessKey} from "@/lib/nearUtils";
 import {useNearStore} from "@/store";
 import {Button} from "@/components/ui/button";
 import {useCopyToClipboard} from "usehooks-ts";
 import {useToast} from "@/hooks/use-toast";
-import {
-	Trash,
-	Infinity,
-	CheckCheck,
-	ClipboardCopy,
-} from "lucide-react";
+import {Trash, Infinity, CheckCheck, ClipboardCopy, Plus} from "lucide-react";
 import {Skeleton} from "@/components/ui/skeleton";
 import {
 	Select,
@@ -18,6 +13,17 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import {Input} from "@/components/ui/input";
+import {Switch} from "@/components/ui/switch";
+import {Label} from "@/components/ui/label";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
 
 const KeySkeleton = () => (
 	<li className="bg-gray-100 p-4 rounded-lg list-none">
@@ -39,6 +45,12 @@ const KeysPage = () => {
 	const {signedAccountId, sortedKeys, fetchAndSortKeys} = useNearStore();
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
+	const [newKeyOptions, setNewKeyOptions] = useState({
+		fullAccess: false,
+		allowance: "",
+		contractId: "",
+		methodNames: "",
+	});
 
 	useEffect(() => {
 		const loadKeys = async () => {
@@ -94,6 +106,34 @@ const KeysPage = () => {
 			});
 	};
 
+	const handleGenerateKey = async () => {
+		try {
+			const options = {
+				...newKeyOptions,
+				allowance: newKeyOptions.allowance
+					? BigInt(newKeyOptions.allowance) * BigInt(1e24)
+					: null,
+				methodNames: newKeyOptions.methodNames
+					.split(",")
+					.map((method) => method.trim()),
+			};
+			await generateAccessKey(signedAccountId, options);
+			toast({
+				title: "Key Generated",
+				description: "Successfully generated a new access key.",
+			});
+			// Reload keys after generating
+			await fetchAndSortKeys(signedAccountId, true);
+		} catch (err) {
+			console.error("Failed to generate key:", err);
+			toast({
+				title: "Error",
+				description: "Failed to generate key. Please try again.",
+				variant: "destructive",
+			});
+		}
+	};
+
 	if (!signedAccountId) return <div>Please connect your wallet.</div>;
 
 	return (
@@ -101,6 +141,7 @@ const KeysPage = () => {
 			<h2 className="text-2xl font-bold mb-4 text-center">
 				{signedAccountId}
 			</h2>
+
 			{loading ? (
 				<div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4">
 					{[...Array(3)].map((_, index) => (
@@ -110,15 +151,71 @@ const KeysPage = () => {
 			) : error ? (
 				<div>{error}</div>
 			) : sortedKeys.length === 0 ? (
-				<p
-					className={`${
-						sortedKeys.length === 0
-							? "display-none"
-							: "display-block"
-					}`}
-				>
-					No keys found for this account.
-				</p>
+				<Card className="mb-4">
+					<CardHeader>
+						<CardTitle>Generate New Key</CardTitle>
+						<CardDescription>
+							Create a new access key for your account
+						</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<div className="space-y-4">
+							<div className="flex items-center space-x-2">
+								<Switch
+									id="full-access"
+									checked={newKeyOptions.fullAccess}
+									onCheckedChange={(checked) =>
+										setNewKeyOptions((prev) => ({
+											...prev,
+											fullAccess: checked,
+										}))
+									}
+								/>
+								<Label htmlFor="full-access">Full Access</Label>
+							</div>
+							{!newKeyOptions.fullAccess && (
+								<>
+									<Input
+										type="number"
+										placeholder="Allowance (in NEAR)"
+										value={newKeyOptions.allowance}
+										onChange={(e) =>
+											setNewKeyOptions((prev) => ({
+												...prev,
+												allowance: e.target.value,
+											}))
+										}
+									/>
+									<Input
+										placeholder="Contract ID"
+										value={newKeyOptions.contractId}
+										onChange={(e) =>
+											setNewKeyOptions((prev) => ({
+												...prev,
+												contractId: e.target.value,
+											}))
+										}
+									/>
+									<Input
+										placeholder="Method Names (comma-separated)"
+										value={newKeyOptions.methodNames}
+										onChange={(e) =>
+											setNewKeyOptions((prev) => ({
+												...prev,
+												methodNames: e.target.value,
+											}))
+										}
+									/>
+								</>
+							)}
+						</div>
+					</CardContent>
+					<CardFooter>
+						<Button onClick={handleGenerateKey} className="w-full">
+							<Plus className="mr-2 h-4 w-4" /> Generate Key
+						</Button>
+					</CardFooter>
+				</Card>
 			) : (
 				<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
 					{sortedKeys.map((key, index) => (
@@ -179,12 +276,15 @@ const KeysPage = () => {
 												}
 											</div>
 										</Button>
-											<Select>
-												<SelectTrigger className="w-full bg-white">
-													<SelectValue className="text-xl font-semibold text-center" placeholder="View Methods" />
-												</SelectTrigger>
-												<SelectContent>
-													{/* {key.access_key.permission.FunctionCall.method_names && 
+										<Select>
+											<SelectTrigger className="w-full bg-white">
+												<SelectValue
+													className="text-xl font-semibold text-center"
+													placeholder="View Methods"
+												/>
+											</SelectTrigger>
+											<SelectContent>
+												{/* {key.access_key.permission.FunctionCall.method_names && 
 														key.access_key.permission.FunctionCall.method_names.map((method, index) => (
 															<SelectItem key={index} value={method}>
 																<div className="w-full flex justify-between items-center">
@@ -194,13 +294,21 @@ const KeysPage = () => {
 															</SelectItem>
 														))
 												} */}
-												{[...Array(3)].map((_, index) => (
-													<SelectItem key={index} className="font-normal text-center" value={`Method ${index + 1}`}>
-														Method {index + 1}
-													</SelectItem>
-												))}
-												</SelectContent>
-											</Select>
+												{[...Array(3)].map(
+													(_, index) => (
+														<SelectItem
+															key={index}
+															className="font-normal text-center"
+															value={`Method ${
+																index + 1
+															}`}
+														>
+															Method {index + 1}
+														</SelectItem>
+													)
+												)}
+											</SelectContent>
+										</Select>
 									</>
 								)}
 							</div>

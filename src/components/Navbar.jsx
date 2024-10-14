@@ -51,33 +51,38 @@ const Navbar = () => {
 									(!route.auth || signedAccountId)
 							)
 							.map((route) => (
-								<NavigationMenuItem className="flex items-center" key={route.path}>
+								<NavigationMenuItem key={route.path}>
 									{route.children ? (
 										<>
 											<NavigationMenuTrigger className="flex items-center">
-												<span className="hidden md:inline">{route.label}</span>
-												<span className="md:hidden">{route.icon}</span>
+													<span className="hidden md:inline">{route.label}</span>
+													<span className="md:hidden">{route.icon}</span>
 											</NavigationMenuTrigger>
 											<NavigationMenuContent>
-												<div className="grid gap-2 p-2 text-center w-[200px] md:w-[300px]">
-													{route.children.map(
-														(child, index) => (
+												<ul className="grid gap-2 p-2 text-center w-[200px] md:w-[300px]">
+													{route.children.map((child, index) => (
+														<li key={`${route.path}-${child.path}`}>
 															<ListItem
 																className={`w-full ${index === 0 && route.children.length % 2 !== 0 ? 'col-span-2' : ''}`}
-																key={child.path}
 																title={child.label}
 																to={`/${route.path}${child.path ? `/${child.path}` : ''}`}
 															>
 																{child.description}
 															</ListItem>
-														)
-													)}
-												</div>
+														</li>
+													))}
+												</ul>
 											</NavigationMenuContent>
 										</>
 									) : (
-										<Link to={route.path}>
-											<NavigationMenuItem className={`block select-none rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground ${currentPath === route.path ? 'bg-accent text-accent-foreground' : ''}`}>
+										<NavigationMenuLink asChild>
+											<Link
+												to={route.path}
+												className={cn(
+													"block select-none rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+													currentPath === route.path ? 'bg-accent text-accent-foreground' : ''
+												)}
+											>
 												<span className="hidden md:inline">{route.label}</span>
 												{route.icon && (
 													<TooltipProvider>
@@ -91,8 +96,8 @@ const Navbar = () => {
 														</Tooltip>
 													</TooltipProvider>
 												)}
-											</NavigationMenuItem>
-										</Link>
+											</Link>
+										</NavigationMenuLink>
 									)}
 								</NavigationMenuItem>
 							))}
