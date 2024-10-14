@@ -51,6 +51,7 @@ const KeysPage = () => {
 		contractId: "",
 		methodNames: "",
 	});
+	const [availableMethods, setAvailableMethods] = useState({});
 
 	useEffect(() => {
 		const loadKeys = async () => {
@@ -61,6 +62,9 @@ const KeysPage = () => {
 
 			try {
 				await fetchAndSortKeys(signedAccountId);
+				// const methods = await getAccountMethods(signedAccountId);
+				let methods
+                setAvailableMethods(methods);
 			} catch (err) {
 				setError("Failed to load keys. Please try again.");
 				console.error("Failed to load keys:", err);
@@ -77,12 +81,8 @@ const KeysPage = () => {
 			await revokeAccessKey(signedAccountId, publicKey);
 			toast({
 				title: "Key Revoked",
-				description: `Successfully revoked key: ${publicKey.slice(
-					0,
-					10
-				)}...`,
+				description: `Successfully revoked key: ${publicKey.slice(0, 10)}...`,
 			});
-			// Reload keys after revoking
 			await fetchAndSortKeys(signedAccountId, true);
 		} catch (err) {
 			console.error("Failed to revoke key:", err);
@@ -122,7 +122,6 @@ const KeysPage = () => {
 				title: "Key Generated",
 				description: "Successfully generated a new access key.",
 			});
-			// Reload keys after generating
 			await fetchAndSortKeys(signedAccountId, true);
 		} catch (err) {
 			console.error("Failed to generate key:", err);
@@ -134,7 +133,53 @@ const KeysPage = () => {
 		}
 	};
 
+	// const handleMethodClick = async (contractId, method) => {
+	// 	try {
+	// 		const near = await initializeNear();
+	// 		const account = await near.account(signedAccountId);
+			
+	// 		// Determine if it's a view or call method (this is a simple heuristic)
+	// 		const isViewMethod = method.startsWith('view_') || method.startsWith('get_');
+			
+	// 		if (isViewMethod) {
+	// 			const result = await account.viewFunction({
+	// 				contractId,
+	// 				methodName: method,
+	// 				args: {}
+	// 			});
+	// 			console.log(`View method ${method} result:`, result);
+	// 			toast({
+	// 				title: "View Method Executed",
+	// 				description: `Method ${method} has been executed. Check console for results.`,
+	// 			});
+	// 		} else {
+	// 			const result = await account.functionCall({
+	// 				contractId,
+	// 				methodName: method,
+	// 				args: {},
+	// 				gas: '300000000000000' // Adjust gas as needed
+	// 			});
+	// 			console.log(`Call method ${method} result:`, result);
+	// 			toast({
+	// 				title: "Call Method Executed",
+	// 				description: `Method ${method} has been executed. Check console for results.`,
+	// 			});
+	// 		}
+	// 	} catch (error) {
+	// 		console.error(`Error executing method ${method}:`, error);
+	// 		toast({
+	// 			title: "Error",
+	// 			description: `Failed to execute method ${method}. Check console for details.`,
+	// 			variant: "destructive",
+	// 		});
+	// 	}
+	// };
+
 	if (!signedAccountId) return <div>Please connect your wallet.</div>;
+	if (loading) return <div>Loading...</div>;
+	if (error) return <div>{error}</div>;
+
+	// console.log("Available methods:", availableMethods); // Log available methods before rendering
 
 	return (
 		<div className="p-4">
@@ -195,17 +240,28 @@ const KeysPage = () => {
 												contractId: e.target.value,
 											}))
 										}
-									/>
-									<Input
-										placeholder="Method Names (comma-separated)"
-										value={newKeyOptions.methodNames}
-										onChange={(e) =>
-											setNewKeyOptions((prev) => ({
-												...prev,
-												methodNames: e.target.value,
-											}))
-										}
-									/>
+                                            />
+									{/* <div className="space-y-2">
+										<Label>Select Methods</Label>
+										<div className="flex flex-wrap gap-2">
+											{availableMethods.map((method) => (
+												<Button
+													key={method}
+													variant={newKeyOptions.methodNames.includes(method) ? "default" : "outline"}
+													onClick={() => {
+														setNewKeyOptions((prev) => ({
+															...prev,
+															methodNames: prev.methodNames.includes(method)
+																? prev.methodNames.filter((m) => m !== method)
+																: [...prev.methodNames, method],
+														}));
+													}}
+												>
+													{method}
+												</Button>
+											))}
+										</div>
+									</div> */}
 								</>
 							)}
 						</div>
@@ -283,31 +339,23 @@ const KeysPage = () => {
 													placeholder="View Methods"
 												/>
 											</SelectTrigger>
-											<SelectContent>
-												{/* {key.access_key.permission.FunctionCall.method_names && 
-														key.access_key.permission.FunctionCall.method_names.map((method, index) => (
-															<SelectItem key={index} value={method}>
-																<div className="w-full flex justify-between items-center">
-																	<span>Method {index + 1}</span>
-																	<span className="text-gray-400">{method}</span>
-																</div>
-															</SelectItem>
-														))
-												} */}
-												{[...Array(3)].map(
-													(_, index) => (
-														<SelectItem
-															key={index}
-															className="font-normal text-center"
-															value={`Method ${
-																index + 1
-															}`}
-														>
-															Method {index + 1}
+											{/* <SelectContent>
+												{availableMethods && 
+												 availableMethods[key.access_key.permission.FunctionCall.receiver_id] ? (
+													availableMethods[key.access_key.permission.FunctionCall.receiver_id].map((method, methodIndex) => (
+														<SelectItem key={methodIndex} value={method}>
+															<Button
+																onClick={() => handleMethodClick(key.access_key.permission.FunctionCall.receiver_id, method)}
+																className="w-full text-left"
+															>
+																{method}
+															</Button>
 														</SelectItem>
-													)
+													))
+												) : (
+													<SelectItem value="no-methods">No methods available</SelectItem>
 												)}
-											</SelectContent>
+											</SelectContent> */}
 										</Select>
 									</>
 								)}

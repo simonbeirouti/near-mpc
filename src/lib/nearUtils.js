@@ -92,8 +92,15 @@ export const generateAccessKey = async (accountId, options) => {
   const appKeyPrefix = 'cubed.lol';
   const wallet = new WalletConnection(near, appKeyPrefix);
 
+  // Check if the user is signed in, if not, initiate sign-in process
   if (!wallet.isSignedIn()) {
-    throw new Error('User is not signed in');
+    console.log('User is not signed in. Initiating sign-in process...');
+    wallet.requestSignIn({
+      contractId: options.contractId || '',
+      methodNames: options.methodNames || [],
+    });
+    // Return early as we're redirecting the user to sign in
+    return null;
   }
 
   const account = wallet.account();
