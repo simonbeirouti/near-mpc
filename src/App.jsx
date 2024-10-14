@@ -1,6 +1,6 @@
 import {NearContext} from "./context";
 
-import {useEffect, useState} from "react";
+import {useEffect, useState, Fragment} from "react";
 import Navbar from "./components/Navbar";
 import {Wallet} from "./services/near-wallet";
 import {
@@ -14,33 +14,37 @@ import ErrorPage from "./pages/ErrorPage";
 import Home from "./pages";
 import AboutPage from "./pages/about";
 import EthereumPage from "./pages/ethereum";
+import KeysPage from "./pages/keys";
 
 // NEAR WALLET
 const wallet = new Wallet({network: "testnet"});
 
 function Root() {
 	return (
-		<div className="flex flex-col overflow-hidden min-h-screen">
+		<Fragment>
 			<Navbar />
 			<main>
 				<Outlet />
 			</main>
-		</div>
+		</Fragment>
 	);
 }
 
 function ErrorBoundary() {
 	return (
-		<>
+		<Fragment>
 			<Navbar />
-			<ErrorPage />
-		</>
+			<div className="flex-1">
+				<ErrorPage />
+			</div>
+		</Fragment>
 	);
 }
 
 export const routes = [
 	{path: "/", element: <Home />, label: "Home", auth: false},
 	{path: "about", element: <AboutPage />, label: "About", auth: false},
+	{path: "keys", element: <KeysPage />, label: "Keys", auth: true},
 	{path: "ethereum", element: <EthereumPage />, label: "Ethereum", auth: true},
 ];
 
@@ -66,7 +70,7 @@ function App() {
 	}, []);
 
 	return (
-		<NearContext.Provider value={{wallet, signedAccountId}}>
+    <NearContext.Provider value={{ wallet, signedAccountId }}>
 			<RouterProvider router={router} />
 		</NearContext.Provider>
 	);
