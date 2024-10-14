@@ -81,3 +81,52 @@ export const revokeAccessKey = async (accountId, publicKeyToRevoke) => {
     throw error;
   }
 };
+
+// Generate a new access key for an account
+export const generateAccessKey = async (accountId, options) => {
+  if (!accountId) {
+    throw new Error('Account ID is required');
+  }
+
+  const near = await initializeNear();
+  const appKeyPrefix = 'cubed.lol';
+  const wallet = new WalletConnection(near, appKeyPrefix);
+
+  if (!wallet.isSignedIn()) {
+    throw new Error('User is not signed in');
+  }
+
+  const account = wallet.account();
+
+  try {
+    const publicKey = await near.connection.signer.createKey(accountId, appKeyPrefix);
+
+    const actions = [{
+      type: 'AddKey',
+      params: {
+        publicKey: publicKey.toString(),
+        accessKey: {
+          nonce: 0,
+          permission: options.fullAccess ? 'FullAccess' : {
+            FunctionCall: {
+              allowance: options.allowance ? options.allowance.toString() : null,
+              receiverId: options.contractId || null,
+              methodNames: options.methodNames || []
+            }
+          }
+        }
+      }
+    }];
+
+    const result = await account.signAndSendTransaction({
+      receiverId: accountId,
+      actions: actions
+    });
+
+    console.log('Access key generated successfully:', result);
+    return result;
+  } catch (error) {
+    console.error('Error generating access key:', error);
+    throw error;
+  }
+};
