@@ -9,7 +9,14 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 function najPublicKeyStrToUncompressedHexPoint(najPublicKeyStr) {
-    return '04' + Buffer.from(najPublicKeyStr.split(':')[1], 'base64').toString('hex');
+    if (!najPublicKeyStr || typeof najPublicKeyStr !== 'string') {
+        throw new Error(`Invalid najPublicKeyStr: ${najPublicKeyStr}`);
+    }
+    const parts = najPublicKeyStr.split(':');
+    if (parts.length !== 2) {
+        throw new Error(`Invalid najPublicKeyStr format: ${najPublicKeyStr}`);
+    }
+    return '04' + Buffer.from(parts[1], 'base64').toString('hex');
 }
 
 async function deriveChildPublicKey(parentUncompressedPublicKeyHex, signerId, path = '') {
@@ -42,13 +49,17 @@ function uncompressedHexPointToEvmAddress(uncompressedHexPoint) {
     return '0x' + address.substring(address.length - 40);
 }
 
-export async function genAddress() {
-    const { MPC_PUBLIC_KEY, NEAR_ACCOUNT_ID, MPC_PATH } = process.env;
+export async function genAddress(nearAccountId, mpcPublicKey, customPath) {
+    console.log('genAddress called with:', { nearAccountId, mpcPublicKey, customPath });
     
+    if (!mpcPublicKey) {
+        throw new Error('mpcPublicKey is undefined or null');
+    }
+
     let childPublicKey = await deriveChildPublicKey(
-        najPublicKeyStrToUncompressedHexPoint(MPC_PUBLIC_KEY),
-        NEAR_ACCOUNT_ID,
-        MPC_PATH
+        najPublicKeyStrToUncompressedHexPoint(mpcPublicKey),
+        nearAccountId,
+        customPath
     );
 
     let address = uncompressedHexPointToEvmAddress(childPublicKey);

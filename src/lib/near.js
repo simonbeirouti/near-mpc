@@ -2,41 +2,42 @@ import * as nearAPI from 'near-api-js';
 import BN from 'bn.js';
 import dotenv from 'dotenv';
 dotenv.config();
+
 const { Near, Account, keyStores, KeyPair } = nearAPI;
 const {
     MPC_CONTRACT_ID,
-    NEAR_ACCOUNT_ID,
-    NEAR_PRIVATE_KEY,
-    NEAR_PROXY_ACCOUNT,
     NEAR_PROXY_CONTRACT,
     NEAR_PROXY_ACCOUNT_ID,
+    NEAR_PROXY_ACCOUNT,
     NEAR_PROXY_PRIVATE_KEY,
 } = process.env;
 
 const isProxyCall = NEAR_PROXY_CONTRACT === 'true';
-const accountId =
-    NEAR_PROXY_ACCOUNT === 'true' ? NEAR_PROXY_ACCOUNT_ID : NEAR_ACCOUNT_ID;
 const contractId = isProxyCall ? NEAR_PROXY_ACCOUNT_ID : MPC_CONTRACT_ID;
-const privateKey =
-    NEAR_PROXY_ACCOUNT === 'true' ? NEAR_PROXY_PRIVATE_KEY : NEAR_PRIVATE_KEY;
-const keyStore = new keyStores.InMemoryKeyStore();
-keyStore.setKey('testnet', accountId, KeyPair.fromString(privateKey));
 
-console.log('Near Chain Signature (NCS) call details:');
-console.log('Near accountId', accountId);
-console.log('NCS contractId', contractId);
+export function initializeNear(accountId, privateKey) {
+    const keyStore = new keyStores.InMemoryKeyStore();
+    keyStore.setKey('testnet', accountId, KeyPair.fromString(privateKey));
 
-const config = {
-    networkId: 'testnet',
-    keyStore: keyStore,
-    nodeUrl: 'https://rpc.testnet.near.org',
-    walletUrl: 'https://testnet.mynearwallet.com/',
-    helperUrl: 'https://helper.testnet.near.org',
-    explorerUrl: 'https://testnet.nearblocks.io',
-};
-export const near = new Near(config);
-export const account = new Account(near.connection, accountId);
-export async function sign(payload, path) {
+    console.log('Near Chain Signature (NCS) call details:');
+    console.log('Near accountId', accountId);
+    console.log('NCS contractId', contractId);
+
+    const config = {
+        networkId: 'testnet',
+        keyStore: keyStore,
+        nodeUrl: 'https://rpc.testnet.near.org',
+        walletUrl: 'https://testnet.mynearwallet.com/',
+        helperUrl: 'https://helper.testnet.near.org',
+        explorerUrl: 'https://testnet.nearblocks.io',
+    };
+    const near = new Near(config);
+    const account = new Account(near.connection, accountId);
+    
+    return { near, account };
+}
+
+export async function sign(account, payload, path) {
     const args = {
         request: {
             payload,
@@ -65,7 +66,6 @@ export async function sign(payload, path) {
     console.log('argument to sign: ', isProxyCall ? proxyArgs : args);
 
     let res;
-    // let res: nearAPI.providers.FinalExecutionOutcome;
     try {
         res = await account.functionCall({
             contractId,
@@ -78,7 +78,6 @@ export async function sign(payload, path) {
         throw new Error(`error signing ${JSON.stringify(e)}`);
     }
 
-    // parse result into signature values we need r, s but we don't need first 2 bytes of r (y-parity)
     if ('SuccessValue' in (res.status)) {
         const successValue = (res.status).SuccessValue;
         const decodedValue = Buffer.from(successValue, 'base64').toString();
