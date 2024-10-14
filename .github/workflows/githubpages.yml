@@ -74,7 +74,7 @@ jobs:
             - name: Upload artifact
               uses: actions/upload-pages-artifact@v3
               with:
-                  path: ./dist # Change this to ./build if your project uses a 'build' directory instead
+                  path: ./
 
     # Deployment job
     deploy:
