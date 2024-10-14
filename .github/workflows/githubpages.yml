@@ -34,18 +34,18 @@ jobs:
               uses: actions/setup-node@v4
               with:
                   node-version: "20"
-                  cache: "yarn"
+                  cache: "npm"
             - name: Install dependencies
-              run: yarn install --frozen-lockfile
+              run: npm ci
             - name: Debug environment
               run: |
                   echo "Node version: $(node -v)"
-                  echo "Yarn version: $(yarn --version)"
+                  echo "NPM version: $(npm --version)"
                   echo "Current directory: $(pwd)"
                   echo "Directory contents:"
                   ls -la
             - name: Build
-              run: yarn vite build
+              run: npx run build
               env:
                   CI: true
             - name: Check build output
