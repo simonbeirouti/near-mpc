@@ -36,9 +36,7 @@ jobs:
                   node-version: "20"
                   cache: "npm"
             - name: Install dependencies
-              run: |
-                  npm ci
-                  npm list vite
+              run: npm ci
             - name: Debug environment
               run: |
                   echo "Node version: $(node -v)"
@@ -47,9 +45,7 @@ jobs:
                   echo "Directory contents:"
                   ls -la
             - name: Build
-              run: |
-                  echo "Starting build process..."
-                  npx vite build
+              run: npx vite build
               env:
                   CI: true
             - name: Check build output
