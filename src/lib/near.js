@@ -36,7 +36,7 @@ const config = {
 };
 export const near = new Near(config);
 export const account = new Account(near.connection, accountId);
-export async function sign(payload: any, path: string) {
+export async function sign(payload, path) {
     const args = {
         request: {
             payload,
@@ -64,7 +64,8 @@ export async function sign(payload: any, path: string) {
     console.log('this may take approx. 30 seconds to complete');
     console.log('argument to sign: ', isProxyCall ? proxyArgs : args);
 
-    let res: nearAPI.providers.FinalExecutionOutcome;
+    let res;
+    // let res: nearAPI.providers.FinalExecutionOutcome;
     try {
         res = await account.functionCall({
             contractId,
@@ -78,8 +79,8 @@ export async function sign(payload: any, path: string) {
     }
 
     // parse result into signature values we need r, s but we don't need first 2 bytes of r (y-parity)
-    if ('SuccessValue' in (res.status as any)) {
-        const successValue = (res.status as any).SuccessValue;
+    if ('SuccessValue' in (res.status)) {
+        const successValue = (res.status).SuccessValue;
         const decodedValue = Buffer.from(successValue, 'base64').toString();
         console.log('decoded value: ', decodedValue);
         const { big_r, s: S, recovery_id } = JSON.parse(decodedValue);
