@@ -54,19 +54,19 @@ const Navbar = () => {
 								<NavigationMenuItem className="flex items-center" key={route.path}>
 									{route.children ? (
 										<>
-											<NavigationMenuTrigger className="flex items-center border-b md:border-none border-gray-600 shadow-xl md:shadow-none">
+											<NavigationMenuTrigger className="flex items-center">
 												<span className="hidden md:inline">{route.label}</span>
 												<span className="md:hidden">{route.icon}</span>
 											</NavigationMenuTrigger>
 											<NavigationMenuContent>
-												<div className="grid gap-2 p-2 text-center w-[200px] md:w-[300px] bg-red-100">
+												<div className="grid gap-2 p-2 text-center w-[200px] md:w-[300px]">
 													{route.children.map(
 														(child, index) => (
 															<ListItem
 																className={`w-full ${index === 0 && route.children.length % 2 !== 0 ? 'col-span-2' : ''}`}
 																key={child.path}
 																title={child.label}
-																href={child.path}
+																to={`/${route.path}${child.path ? `/${child.path}` : ''}`}
 															>
 																{child.description}
 															</ListItem>
@@ -122,25 +122,26 @@ const Navbar = () => {
 
 export default Navbar;
 
-const ListItem = forwardRef(({className, title, children, ...props}, ref) => {
+const ListItem = forwardRef(({className, title, children, to, ...props}, ref) => {
 	return (
-			<NavigationMenuLink asChild>
-				<a
-					ref={ref}
-					className={cn(
-						"block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-						className
-					)}
-					{...props}
-				>
-					<div className="text-sm font-medium leading-none">
-						{title}
-					</div>
-					<p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-						{children}
-					</p>
-				</a>
-			</NavigationMenuLink>
+		<NavigationMenuLink asChild>
+			<Link
+				ref={ref}
+				to={to}
+				className={cn(
+					"block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+					className
+				)}
+				{...props}
+			>
+				<div className="text-sm font-medium leading-none">
+					{title}
+				</div>
+				<p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+					{children}
+				</p>
+			</Link>
+		</NavigationMenuLink>
 	);
 });
 ListItem.displayName = "ListItem";
