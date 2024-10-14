@@ -2,6 +2,17 @@ name: Deploy site to Pages
 
 env:
     NODE_ENV: "production"
+    VITE_NEAR_ACCOUNT_ID: ${{ secrets.VITE_NEAR_ACCOUNT_ID }}
+    VITE_NEAR_PRIVATE_KEY: ${{ secrets.VITE_NEAR_PRIVATE_KEY }}
+    VITE_MPC_PATH: ${{ secrets.VITE_MPC_PATH }}
+    VITE_MPC_CHAIN: ${{ secrets.VITE_MPC_CHAIN }}
+    VITE_MPC_CONTRACT_ID: ${{ secrets.VITE_MPC_CONTRACT_ID }}
+    VITE_MPC_PUBLIC_KEY: ${{ secrets.VITE_MPC_PUBLIC_KEY }}
+    NEAR_PROXY_ACCOUNT: ${{ secrets.NEAR_PROXY_ACCOUNT }}
+    NEAR_PROXY_CONTRACT: ${{ secrets.NEAR_PROXY_CONTRACT }}
+    NEAR_PROXY_ACCOUNT_ID: ${{ secrets.NEAR_PROXY_ACCOUNT_ID }}
+    NEAR_PROXY_PUBLIC_KEY: ${{ secrets.NEAR_PROXY_PUBLIC_KEY }}
+    NEAR_PROXY_PRIVATE_KEY: ${{ secrets.NEAR_PROXY_PRIVATE_KEY }}
 
 on:
     # Runs on pushes targeting the default branch
