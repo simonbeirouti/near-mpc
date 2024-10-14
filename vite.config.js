@@ -23,7 +23,6 @@ export default defineConfig({
       include: ['process']
     }),
     ViteImageOptimizer({
-      // plugin options
       png: {
         // https://sharp.pixelplumbing.com/api-output#png
         quality: 80,
@@ -36,7 +35,20 @@ export default defineConfig({
         // https://sharp.pixelplumbing.com/api-output#jpeg
         quality: 80,
       },
-      // ... other image types
+      svg: {
+        // https://svgo.dev/docs/configuration/
+        plugins: [
+          {
+            name: 'preset-default',
+            params: {
+              overrides: {
+                removeViewBox: false,
+                removeTitle: false,
+              },
+            },
+          },
+        ],
+      },
     }),
   ],
 	base: "/",
