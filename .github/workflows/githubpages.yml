@@ -36,9 +36,26 @@ jobs:
                   node-version: "20"
                   cache: "npm"
             - name: Install dependencies
-              run: npm ci
+              run: |
+                  npm ci
+                  npm list vite
+            - name: Debug environment
+              run: |
+                  echo "Node version: $(node -v)"
+                  echo "NPM version: $(npm -v)"
+                  echo "Current directory: $(pwd)"
+                  echo "Directory contents:"
+                  ls -la
             - name: Build
-              run: npm run build
+              run: |
+                  echo "Starting build process..."
+                  npm run build
+              env:
+                  CI: true
+            - name: Check build output
+              run: |
+                  echo "Build output:"
+                  ls -la dist
             - name: Upload artifact
               uses: actions/upload-pages-artifact@v3
               with:
