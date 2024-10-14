@@ -39,9 +39,9 @@ function ErrorBoundary() {
 }
 
 export const routes = [
-	{path: "/", element: <Home />, label: "Home"},
-	{path: "about", element: <AboutPage />, label: "About"},
-	{path: "ethereum", element: <EthereumPage />, label: "Ethereum"},
+	{path: "/", element: <Home />, label: "Home", auth: false},
+	{path: "about", element: <AboutPage />, label: "About", auth: false},
+	{path: "ethereum", element: <EthereumPage />, label: "Ethereum", auth: true},
 ];
 
 export const router = createBrowserRouter(
