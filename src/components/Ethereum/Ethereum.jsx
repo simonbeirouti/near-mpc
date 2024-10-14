@@ -1,5 +1,5 @@
-import {useState, useEffect, useContext} from "react";
-import {NearContext} from "../../context";
+import {useState, useEffect} from "react";
+import {useNearStore} from "../../store";
 
 import {Ethereum} from "../../services/ethereum";
 import {useDebounce} from "../../hooks/debounce";
@@ -22,7 +22,7 @@ const Sepolia = 11155111;
 const Eth = new Ethereum("https://rpc2.sepolia.org", Sepolia);
 
 export function EthereumView({props: {setStatus, MPC_CONTRACT, transactions}}) {
-	const {wallet, signedAccountId} = useContext(NearContext);
+	const {wallet, signedAccountId} = useNearStore();
 
 	const [loading, setLoading] = useState(false);
 	const [step, setStep] = useState(transactions ? "relay" : "request");

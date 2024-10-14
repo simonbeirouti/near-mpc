@@ -1,12 +1,11 @@
-import {useContext} from "react";
-import {NearContext} from "../context";
+import {useNearStore} from "../store";
 import {Link} from "react-router-dom";
 import {Button} from "@/components/ui/button";
 import {Home} from "lucide-react";
 import {routes} from "../App"; // Import the routes
 
 const Navbar = () => {
-	const {wallet, signedAccountId} = useContext(NearContext);
+	const {wallet, signedAccountId} = useNearStore();
 
 	const signIn = () => {
 		wallet.signIn();
@@ -32,12 +31,29 @@ const Navbar = () => {
 						</Link>
 					))}
 				{signedAccountId ? (
-					<Button onClick={signOut}>
-						Logout {signedAccountId.slice(0, 4)}...
-						{signedAccountId.slice(-4)}
+					<Button
+						onClick={signOut}
+						className="bg-green-600 hover:bg-green-400 text-white font-bold py-2 px-4 rounded shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
+						style={{
+							boxShadow: '0 0 10px #4ade80, 0 0 20px #4ade80, 0 0 30px #4ade80',
+							textShadow: '0 0 5px #4ade80'
+						}}
+					>
+            Online
+            {/* {signedAccountId.slice(0, 4)}...
+						{signedAccountId.slice(-4)} */}
 					</Button>
 				) : (
-					<Button onClick={signIn}>Login</Button>
+					<Button
+						onClick={signIn}
+						className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
+						style={{
+							boxShadow: '0 0 10px #ef4444, 0 0 20px #ef4444, 0 0 30px #ef4444',
+							textShadow: '0 0 5px #ef4444'
+						}}
+					>
+						Login
+					</Button>
 				)}
 			</div>
 		</nav>

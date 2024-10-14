@@ -1,6 +1,5 @@
-import { useState, useEffect, useContext } from "react";
-import { NearContext } from "../context";
-
+import { useState, useEffect } from "react";
+import { useNearStore } from "../store";
 import { Bitcoin as Bitcoin } from "../services/bitcoin";
 import { useDebounce } from "../hooks/debounce";
 import PropTypes from 'prop-types';
@@ -9,7 +8,7 @@ const BTC_NETWORK = 'testnet';
 const BTC = new Bitcoin('https://blockstream.info/testnet/api', BTC_NETWORK);
 
 export function BitcoinView({ props: { setStatus, MPC_CONTRACT } }) {
-  const { wallet, signedAccountId } = useContext(NearContext);
+  const { wallet, signedAccountId } = useNearStore();
 
   const [receiver, setReceiver] = useState("tb1q86ec0aszet5r3qt02j77f3dvxruk7tuqdlj0d5");
   const [amount, setAmount] = useState(1000);

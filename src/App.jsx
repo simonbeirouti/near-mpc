@@ -1,6 +1,4 @@
-import {NearContext} from "./context";
-
-import {useEffect, useState, Fragment} from "react";
+import {useEffect, Fragment} from "react";
 import Navbar from "./components/Navbar";
 import {Wallet} from "./services/near-wallet";
 import {
@@ -15,6 +13,7 @@ import Home from "./pages";
 import AboutPage from "./pages/about";
 import EthereumPage from "./pages/ethereum";
 import KeysPage from "./pages/keys";
+import {useNearStore} from "./store";
 
 // NEAR WALLET
 const wallet = new Wallet({network: "testnet"});
@@ -63,17 +62,18 @@ export const router = createBrowserRouter(
 );
 
 function App() {
-	const [signedAccountId, setSignedAccountId] = useState("");
+	const setWallet = useNearStore((state) => state.setWallet);
+	const setSignedAccountId = useNearStore((state) => state.setSignedAccountId);
+	const setWalletInitialized = useNearStore((state) => state.setWalletInitialized);
 
 	useEffect(() => {
-		wallet.startUp(setSignedAccountId);
-	}, []);
+		setWallet(wallet);
+		wallet.startUp(setSignedAccountId).then(() => {
+			setWalletInitialized(true);
+		});
+	}, [setWallet, setSignedAccountId, setWalletInitialized]);
 
-	return (
-    <NearContext.Provider value={{ wallet, signedAccountId }}>
-			<RouterProvider router={router} />
-		</NearContext.Provider>
-	);
+	return <RouterProvider router={router} />;
 }
 
 export default App;

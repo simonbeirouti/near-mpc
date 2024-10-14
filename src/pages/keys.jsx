@@ -1,89 +1,215 @@
-import React, { useState, useContext } from 'react';
-import { initializeNear, sign } from '../lib/near';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { genAddress } from '../lib/kdf';
-import { NearContext } from '../context';
+import React, {useState, useEffect} from "react";
+import {revokeAccessKey} from "@/lib/nearUtils";
+import {useNearStore} from "@/store";
+import {Button} from "@/components/ui/button";
+import {useCopyToClipboard} from "usehooks-ts";
+import {useToast} from "@/hooks/use-toast";
+import {
+	Trash,
+	Infinity,
+	CheckCheck,
+	ClipboardCopy,
+} from "lucide-react";
+import {Skeleton} from "@/components/ui/skeleton";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 
-console.log('All env variables:', import.meta.env);
-console.log('VITE_NEAR_PRIVATE_KEY:', import.meta.env.VITE_NEAR_PRIVATE_KEY);
-console.log('VITE_MPC_PUBLIC_KEY:', import.meta.env.VITE_MPC_PUBLIC_KEY);
-console.log('VITE_MPC_PATH:', import.meta.env.VITE_MPC_PATH);
+const KeySkeleton = () => (
+	<li className="bg-gray-100 p-4 rounded-lg list-none">
+		<div className="flex items-center w-full gap-x-2">
+			<Skeleton className="h-9 w-full" />
+			<Skeleton className="h-9 w-14" />
+			<Skeleton className="h-9 w-14" />
+		</div>
+		<div className="flex flex-col gap-y-2 items-center w-full gap-x-2 mt-2">
+			<Skeleton className="h-9 w-full" />
+			<Skeleton className="h-9 w-full" />
+			<Skeleton className="h-9 w-full" />
+		</div>
+	</li>
+);
 
-export default function KeysPage() {
-    const { wallet, signedAccountId } = useContext(NearContext);
-    const [address, setAddress] = useState('');
-    const [publicKey, setPublicKey] = useState('');
-    const [signature, setSignature] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+const KeysPage = () => {
+	const {toast} = useToast();
+	const {signedAccountId, sortedKeys, fetchAndSortKeys} = useNearStore();
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(null);
 
-    const handleGenerateKeys = async () => {
-        setIsLoading(true);
-        try {
-            const userNearAccountId = signedAccountId;
-            console.log('userNearAccountId:', userNearAccountId);
-            const userPrivateKey = import.meta.env.VITE_NEAR_PRIVATE_KEY;
-            const mpcPublicKey = import.meta.env.VITE_MPC_PUBLIC_KEY;
-            const userCustomPath = import.meta.env.VITE_MPC_PATH;
+	useEffect(() => {
+		const loadKeys = async () => {
+			if (!signedAccountId) {
+				setLoading(false);
+				return;
+			}
 
-            console.log('Generating address with:', {
-                userNearAccountId,
-                mpcPublicKey,
-                userCustomPath
-            });
+			try {
+				await fetchAndSortKeys(signedAccountId);
+			} catch (err) {
+				setError("Failed to load keys. Please try again.");
+				console.error("Failed to load keys:", err);
+			} finally {
+				setLoading(false);
+			}
+		};
 
-            if (!mpcPublicKey) {
-                throw new Error('MPC Public Key is undefined. Check your environment variables.');
-            }
+		loadKeys();
+	}, [signedAccountId, fetchAndSortKeys]);
 
-            // Generate address
-            const { address: generatedAddress, publicKey: generatedPublicKey } = await genAddress(userNearAccountId, mpcPublicKey, userCustomPath);
-            setAddress(generatedAddress);
-            setPublicKey(generatedPublicKey);
+	const handleRevokeKey = async (publicKey) => {
+		try {
+			await revokeAccessKey(signedAccountId, publicKey);
+			toast({
+				title: "Key Revoked",
+				description: `Successfully revoked key: ${publicKey.slice(
+					0,
+					10
+				)}...`,
+			});
+			// Reload keys after revoking
+			await fetchAndSortKeys(signedAccountId, true);
+		} catch (err) {
+			console.error("Failed to revoke key:", err);
+			toast({
+				title: "Error",
+				description: "Failed to revoke key. Please try again.",
+				variant: "destructive",
+			});
+		}
+	};
 
-            // Initialize NEAR
-            const { account } = await initializeNear(userNearAccountId, userPrivateKey);
+	const [copiedText, copy] = useCopyToClipboard();
 
-            // Sign a payload
-            const sig = await sign(account, 'Hello, World!', userCustomPath);
-            setSignature(JSON.stringify(sig));
-        } catch (error) {
-            console.error('Error generating keys:', error);
-            alert(error.message || 'Error generating keys. Check console for details.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
+	const handleCopy = (text) => () => {
+		copy(text)
+			.then(() => {
+				console.log("Copied!", {text});
+			})
+			.catch((error) => {
+				console.error("Failed to copy!", error);
+			});
+	};
 
-    return (
-        <div className="p-4 space-y-4">
-            <h1 className="text-2xl font-bold">Keys Page</h1>
-            <Input>Wallet: {wallet ? 'Connected' : 'Not Connected'}</Input>
-            <Input>Signed Account ID: {signedAccountId || 'Not signed in'}</Input>
-            <Button 
-                onClick={handleGenerateKeys} 
-                disabled={isLoading}
-            >
-                {isLoading ? 'Generating...' : 'Generate Keys and Sign'}
-            </Button>
-            {address && (
-                <div className="space-y-2">
-                    <h2 className="text-xl font-semibold">Generated Data:</h2>
-                    <div className="space-y-2">
-                        <Label htmlFor="address">Address:</Label>
-                        <Input id="address" value={address} readOnly />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="publicKey">Public Key:</Label>
-                        <Input id="publicKey" value={publicKey} readOnly />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="signature">Signature:</Label>
-                        <Input id="signature" value={signature} readOnly />
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
+	if (!signedAccountId) return <div>Please connect your wallet.</div>;
+
+	return (
+		<div className="p-4">
+			<h2 className="text-2xl font-bold mb-4 text-center">
+				{signedAccountId}
+			</h2>
+			{loading ? (
+				<div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4">
+					{[...Array(3)].map((_, index) => (
+						<KeySkeleton key={index} />
+					))}
+				</div>
+			) : error ? (
+				<div>{error}</div>
+			) : sortedKeys.length === 0 ? (
+				<p
+					className={`${
+						sortedKeys.length === 0
+							? "display-none"
+							: "display-block"
+					}`}
+				>
+					No keys found for this account.
+				</p>
+			) : (
+				<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
+					{sortedKeys.map((key, index) => (
+						<li
+							key={index}
+							className="bg-gray-100 p-4 rounded-lg list-none"
+						>
+							<div className="flex items-center w-full gap-x-2">
+								<Button className="flex-grow cursor-pointer font-semibold truncate">
+									Visit!
+								</Button>
+								<Button
+									onClick={handleCopy(key.public_key)}
+									className="p-2"
+								>
+									<p>
+										{copiedText === key.public_key ? (
+											<CheckCheck />
+										) : (
+											<ClipboardCopy />
+										)}
+									</p>
+								</Button>
+								<Button
+									variant="destructive"
+									className="p-2"
+									onClick={() =>
+										handleRevokeKey(key.public_key)
+									}
+								>
+									<Trash className="h-5 w-5" />
+								</Button>
+							</div>
+							<div className="flex flex-col gap-y-2 items-center w-full gap-x-2 mt-2">
+								{key.access_key.permission !== "FullAccess" && (
+									<>
+										<Button className="w-full font-semibold">
+											{key.access_key.permission
+												.FunctionCall.allowance ? (
+												`${(
+													parseInt(
+														key.access_key
+															.permission
+															.FunctionCall
+															.allowance
+													) / 1e24
+												).toFixed(2)}`
+											) : (
+												<Infinity />
+											)}
+										</Button>
+										<Button className="w-full font-semibold overflow-hidden">
+											<div className="truncate hover:text-clip hover:overflow-x-auto">
+												{
+													key.access_key.permission
+														.FunctionCall
+														.receiver_id
+												}
+											</div>
+										</Button>
+											<Select>
+												<SelectTrigger className="w-full bg-white">
+													<SelectValue className="text-xl font-semibold text-center" placeholder="View Methods" />
+												</SelectTrigger>
+												<SelectContent>
+													{/* {key.access_key.permission.FunctionCall.method_names && 
+														key.access_key.permission.FunctionCall.method_names.map((method, index) => (
+															<SelectItem key={index} value={method}>
+																<div className="w-full flex justify-between items-center">
+																	<span>Method {index + 1}</span>
+																	<span className="text-gray-400">{method}</span>
+																</div>
+															</SelectItem>
+														))
+												} */}
+												{[...Array(3)].map((_, index) => (
+													<SelectItem key={index} className="font-normal text-center" value={`Method ${index + 1}`}>
+														Method {index + 1}
+													</SelectItem>
+												))}
+												</SelectContent>
+											</Select>
+									</>
+								)}
+							</div>
+						</li>
+					))}
+				</div>
+			)}
+		</div>
+	);
+};
+
+export default KeysPage;

@@ -1,5 +1,5 @@
-import { useState, useContext } from "react";
-import { NearContext } from "@/context";
+import { useState } from "react";
+import { useNearStore } from "@/store";
 import { EthereumView } from "@/components/Ethereum/Ethereum";
 import {BitcoinView} from "@/components/Bitcoin";
 import {Input} from "@/components/ui/input";
@@ -21,10 +21,10 @@ const txHash = new URLSearchParams(window.location.search).get(
 const transactions = txHash ? txHash.split(",") : [];
 
 export default function EthereumPage() {
-    const { signedAccountId } = useContext(NearContext);
-    const [status, setStatus] = useState("Please login to request a signature");
-    const [chain, setChain] = useState("eth");
-    
+	const { signedAccountId } = useNearStore();
+	const [status, setStatus] = useState("Please login to request a signature");
+	const [chain, setChain] = useState("eth");
+	
 	return (
 		<div className="flex flex-col h-full items-center justify-center p-4">
 			<h1 className="text-3xl font-bold mb-8">🔗 NEAR Multi Chain</h1>
