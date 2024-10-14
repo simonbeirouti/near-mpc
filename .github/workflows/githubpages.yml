@@ -48,27 +48,10 @@ jobs:
                   cache: "npm"
             - name: Install dependencies
               run: npm ci
-            - name: Debug environment
-              run: |
-                  echo "Node version: $(node -v)"
-                  echo "NPM version: $(npm --version)"
-                  echo "Current directory: $(pwd)"
-                  echo "Directory contents:"
-                  ls -la
-            - name: Debug pre-build
-              run: |
-                  echo "Pre-build directory contents:"
-                  ls -la
             - name: Build
               run: npx run build
               env:
                   CI: true
-            - name: Debug post-build
-              run: |
-                  echo "Post-build directory contents:"
-                  ls -la
-                  echo "Package.json contents:"
-                  cat package.json
             - name: Check build output
               run: |
                   echo "Build output:"
