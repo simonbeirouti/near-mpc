@@ -80,7 +80,8 @@ export default defineConfig({
 			plugins: [
 				rollupNodePolyFill()
 			]
-		}
+    },
+    outDir: 'dist',
 	},
 	define: {
 		'global': 'globalThis',
