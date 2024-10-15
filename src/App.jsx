@@ -35,10 +35,10 @@ const LoadingSpinner = () => (
 function Root() {
 	return (
 		<Fragment>
-			<Navbar />
-			<main>
+			<main className="flex-grow">
 				<Outlet />
 			</main>
+			<Navbar className="fixed bottom-0 left-0 right-0" />
 		</Fragment>
 	);
 }
@@ -46,10 +46,10 @@ function Root() {
 function ErrorBoundary() {
 	return (
 		<Fragment>
-			<Navbar />
-			<div className="flex-1">
+			<div className="flex-grow">
 				<ErrorPage />
 			</div>
+			<Navbar className="fixed bottom-0 left-0 right-0" />
 		</Fragment>
 	);
 }

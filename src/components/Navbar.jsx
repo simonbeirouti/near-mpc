@@ -1,27 +1,29 @@
-import {forwardRef} from "react";
+import {useState} from "react";
 import {useNearStore} from "../store";
 import {Link, useLocation} from "react-router-dom";
 import {Button} from "@/components/ui/button";
-import {
-	NavigationMenu,
-	NavigationMenuContent,
-	NavigationMenuItem,
-	NavigationMenuLink,
-	NavigationMenuList,
-	NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
 import {routes} from "../App";
-import {Home, LogOut, LogIn,ChevronDownIcon} from "lucide-react";
+import {Home, LogOut, LogIn, Menu, ChevronDown, ChevronUp} from "lucide-react";
 import {cn} from "@/lib/utils";
 import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+	Drawer,
+	DrawerContent,
+	DrawerFooter,
+	DrawerClose,
+	DrawerTrigger,
+} from "@/components/ui/drawer";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 
-const Navbar = () => {
+const Navbar = ({className}) => {
 	const {wallet, signedAccountId} = useNearStore();
+	const [open, setIsOpen] = useState(false);
+	const [expandedRoutes, setExpandedRoutes] = useState({});
 
 	const signIn = () => {
 		wallet.signIn();
@@ -34,119 +36,135 @@ const Navbar = () => {
 	const location = useLocation();
 	const currentPath = location.pathname.replace(/^\//, "");
 
+	const toggleRouteExpansion = (routePath) => {
+		setExpandedRoutes((prev) => ({...prev, [routePath]: !prev[routePath]}));
+	};
+
 	return (
-		<nav className="flex flex-row justify-between items-center w-screen p-2 z-10">
-			<Link to="/">
-				<Button variant="outline">
-					<Home className="h-4 w-4" />
-				</Button>
-			</Link>
-			<div className="flex flex-grow justify-end items-center">
-				<NavigationMenu>
-					<NavigationMenuList className="mr-2">
-						{routes
-							.filter(
-								(route) =>
-									route.path !== "/" &&
-									(!route.auth || signedAccountId)
-							)
-							.map((route) => (
-								<NavigationMenuItem key={route.path}>
-									{route.children ? (
-										<>
-											<NavigationMenuTrigger className="flex items-center">
-													<span className="hidden md:inline">{route.label}</span>
-													<span className="md:hidden">{route.icon}</span>
-											</NavigationMenuTrigger>
-											<NavigationMenuContent>
-												<ul className="grid gap-2 p-2 text-center w-[200px] md:w-[300px]">
-													{route.children.map((child, index) => (
-														<li key={`${route.path}-${child.path}`}>
-															<ListItem
-																className={`w-full ${index === 0 && route.children.length % 2 !== 0 ? 'col-span-2' : ''}`}
-																title={child.label}
-																to={`/${route.path}${child.path ? `/${child.path}` : ''}`}
-															>
-																{child.description}
-															</ListItem>
-														</li>
-													))}
-												</ul>
-											</NavigationMenuContent>
-										</>
-									) : (
-										<NavigationMenuLink asChild>
-											<Link
-												to={route.path}
-												className={cn(
-													"block select-none rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-													currentPath === route.path ? 'bg-accent text-accent-foreground' : ''
-												)}
-											>
-												<span className="hidden md:inline">{route.label}</span>
-												{route.icon && (
-													<TooltipProvider>
-														<Tooltip>
-															<TooltipTrigger asChild>
-																<span className="md:hidden">{route.icon}</span>
-															</TooltipTrigger>
-															<TooltipContent>
-																<p>{route.label}</p>
-															</TooltipContent>
-														</Tooltip>
-													</TooltipProvider>
-												)}
-											</Link>
-										</NavigationMenuLink>
-									)}
-								</NavigationMenuItem>
-							))}
-					</NavigationMenuList>
-				</NavigationMenu>
-			</div>
-			<div className="flex justify-end items-center">
-				{signedAccountId ? (
-					<Button
-						onClick={signOut}
-						className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded shadow-lg transition-all duration-300 ease-in-out transform hover:scale-50"
-					>
-						<LogOut className="h-4 w-4" />
-					</Button>
-				) : (
-					<Button
-						onClick={signIn}
-						className="bg-green-600 hover:bg-green-400 text-white font-bold py-2 px-4 rounded shadow-lg transition-all duration-300 ease-in-out transform hover:scale-50"
-					>
-						<LogIn className="h-4 w-4" />
-					</Button>
+		<>
+			<nav
+				className={cn(
+					"flex flex-row justify-between items-center w-screen p-2 z-20 gap-2",
+					className
 				)}
-			</div>
-		</nav>
+			>
+				<Link to="/">
+					<Button variant="outline">
+						<Home className="h-4 w-4" />
+					</Button>
+				</Link>
+				<Drawer open={open} onOpenChange={setIsOpen}>
+					<DrawerTrigger className="flex flex-grow justify-center items-center" asChild>
+						<Button
+							onClick={() => setIsOpen(true)}
+						>
+							<Menu className="h-4 w-4" />
+						</Button>
+					</DrawerTrigger>
+					<DrawerContent>
+						<div className="pt-4">
+							<ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-y-4  gap-4 mx-4">
+								{routes
+									.filter(
+										(route) =>
+											route.path !== "/" &&
+											(!route.auth || signedAccountId)
+									)
+									.map((route) => (
+										<li
+											key={route.path}
+											className="text-center rounded-md"
+										>
+											{route.children ? (
+												<Select
+													onValueChange={(value) => {
+														setIsOpen(false);
+														const selectedChild = route.children.find(child => `${route.path}/${child.path}` === value);
+														if (selectedChild) {
+															// Use your routing method here, e.g., navigate or history.push
+															// For example: navigate(`/${route.path}/${selectedChild.path}`);
+														}
+													}}
+												>
+													<SelectTrigger className="w-full flex justify-center">
+														<SelectValue className="font-bold" placeholder={route.label} />
+													</SelectTrigger>
+													<SelectContent>
+														{route.children
+															.filter(
+																(child) =>
+																	!child.index
+															)
+															.map((child) => (
+																<SelectItem
+																	key={`${route.path}-${child.path}`}
+																	value={`${route.path}/${child.path}`}
+																	className="flex justify-center"
+																>
+																	<Link
+																		to={`/${
+																			route.path
+																		}${
+																			child.path
+																				? `/${child.path}`
+																				: ""
+																		}`}
+																		className="text-sm hover:text-accent-foreground transition-colors block pl-4"
+																	>
+																		{
+																			child.label
+																		}
+																	</Link>
+																</SelectItem>
+															))}
+													</SelectContent>
+												</Select>
+											) : (
+												<Link
+													to={route.path}
+													className={cn(
+														"",
+														currentPath ===
+															route.path
+															? "text-accent-foreground"
+															: ""
+													)}
+													onClick={() =>
+														setIsOpen(false)
+													}
+												>
+													<Button className="w-full" variant="outline">
+														{route.label}
+													</Button>
+												</Link>
+											)}
+										</li>
+									))}
+							</ul>
+						</div>
+						<DrawerFooter className="flex justify-center items-center w-full">
+							<DrawerClose className="w-full">
+								<Button className="w-full" variant="outline">
+									Cancel
+								</Button>
+							</DrawerClose>
+						</DrawerFooter>
+					</DrawerContent>
+				</Drawer>
+				<div className="flex justify-end items-center">
+					{signedAccountId ? (
+						<Button onClick={signOut} variant="destructive">
+							<LogOut className="h-4 w-4" />
+						</Button>
+					) : (
+						<Button onClick={signIn} className="bg-green-600 hover:bg-green-500">
+							<LogIn className="h-4 w-4" />
+						</Button>
+					)}
+				</div>
+			</nav>
+		</>
 	);
 };
 
 export default Navbar;
-
-const ListItem = forwardRef(({className, title, children, to, ...props}, ref) => {
-	return (
-		<NavigationMenuLink asChild>
-			<Link
-				ref={ref}
-				to={to}
-				className={cn(
-					"block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-					className
-				)}
-				{...props}
-			>
-				<div className="text-sm font-medium leading-none">
-					{title}
-				</div>
-				<p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-					{children}
-				</p>
-			</Link>
-		</NavigationMenuLink>
-	);
-});
-ListItem.displayName = "ListItem";
