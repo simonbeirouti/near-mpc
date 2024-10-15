@@ -32,6 +32,8 @@ const createNearStore = (set) => ({
   setSignedAccountId: (signedAccountId) => set({ signedAccountId }),
   setWalletInitialized: (isInitialized) => set({ isWalletInitialized: isInitialized }),
   sortedKeys: [],
+  accounts: [],
+  setAccounts: (accounts) => set({ accounts }),
   
   fetchAndSortKeys: async (accountId) => {
     try {

@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from "react";
-import {revokeAccessKey, generateAccessKey} from "@/lib/nearUtils";
 import {useNearStore} from "@/store";
+import {useNearActions} from "@/hooks/useNearActions";
 import {Button} from "@/components/ui/button";
 import {useCopyToClipboard} from "usehooks-ts";
 import {useToast} from "@/hooks/use-toast";
@@ -41,17 +41,30 @@ const KeySkeleton = () => (
 );
 
 const KeysPage = () => {
-	const {toast} = useToast();
-	const {signedAccountId, sortedKeys, fetchAndSortKeys} = useNearStore();
+	const {signedAccountId, fetchAndSortKeys} = useNearStore();
+	const {handleRevokeKey, handleGenerateKey, loadAccounts, handleCreateAccount, handleDeleteAccount} = useNearActions();
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
-	const [newKeyOptions, setNewKeyOptions] = useState({
-		fullAccess: false,
-		allowance: "",
-		contractId: "",
-		methodNames: "",
-	});
-	const [availableMethods, setAvailableMethods] = useState({});
+	// const [newKeyOptions, setNewKeyOptions] = useState({
+	// 	fullAccess: false,
+	// 	allowance: "",
+	// 	contractId: "",
+	// 	methodNames: "",
+	// });
+	// const [availableMethods, setAvailableMethods] = useState({});
+	// const [copiedText, copy] = useCopyToClipboard();
+
+	const [newAccountName, setNewAccountName] = useState('');
+
+	// const handleCopy = (text) => () => {
+	// 	copy(text)
+	// 		.then(() => {
+	// 			console.log("Copied!", {text});
+	// 		})
+	// 		.catch((error) => {
+	// 			console.error("Failed to copy!", error);
+	// 		});
+	// };
 
 	useEffect(() => {
 		const loadKeys = async () => {
@@ -62,9 +75,7 @@ const KeysPage = () => {
 
 			try {
 				await fetchAndSortKeys(signedAccountId);
-				// const methods = await getAccountMethods(signedAccountId);
-				let methods
-                setAvailableMethods(methods);
+				await loadAccounts();
 			} catch (err) {
 				setError("Failed to load keys. Please try again.");
 				console.error("Failed to load keys:", err);
@@ -74,105 +85,19 @@ const KeysPage = () => {
 		};
 
 		loadKeys();
-	}, [signedAccountId, fetchAndSortKeys]);
+	}, [signedAccountId, fetchAndSortKeys, loadAccounts]);
 
-	const handleRevokeKey = async (publicKey) => {
-		try {
-			await revokeAccessKey(signedAccountId, publicKey);
-			toast({
-				title: "Key Revoked",
-				description: `Successfully revoked key: ${publicKey.slice(0, 10)}...`,
-			});
-			await fetchAndSortKeys(signedAccountId, true);
-		} catch (err) {
-			console.error("Failed to revoke key:", err);
-			toast({
-				title: "Error",
-				description: "Failed to revoke key. Please try again.",
-				variant: "destructive",
-			});
-		}
-	};
-
-	const [copiedText, copy] = useCopyToClipboard();
-
-	const handleCopy = (text) => () => {
-		copy(text)
-			.then(() => {
-				console.log("Copied!", {text});
-			})
-			.catch((error) => {
-				console.error("Failed to copy!", error);
-			});
-	};
-
-	const handleGenerateKey = async () => {
-		try {
-			const options = {
-				...newKeyOptions,
-				allowance: newKeyOptions.allowance
-					? BigInt(newKeyOptions.allowance) * BigInt(1e24)
-					: null,
-				methodNames: newKeyOptions.methodNames
-					.split(",")
-					.map((method) => method.trim()),
-			};
-			await generateAccessKey(signedAccountId, options);
-			toast({
-				title: "Key Generated",
-				description: "Successfully generated a new access key.",
-			});
-			await fetchAndSortKeys(signedAccountId, true);
-		} catch (err) {
-			console.error("Failed to generate key:", err);
-			toast({
-				title: "Error",
-				description: "Failed to generate key. Please try again.",
-				variant: "destructive",
-			});
-		}
-	};
-
-	// const handleMethodClick = async (contractId, method) => {
-	// 	try {
-	// 		const near = await initializeNear();
-	// 		const account = await near.account(signedAccountId);
-			
-	// 		// Determine if it's a view or call method (this is a simple heuristic)
-	// 		const isViewMethod = method.startsWith('view_') || method.startsWith('get_');
-			
-	// 		if (isViewMethod) {
-	// 			const result = await account.viewFunction({
-	// 				contractId,
-	// 				methodName: method,
-	// 				args: {}
-	// 			});
-	// 			console.log(`View method ${method} result:`, result);
-	// 			toast({
-	// 				title: "View Method Executed",
-	// 				description: `Method ${method} has been executed. Check console for results.`,
-	// 			});
-	// 		} else {
-	// 			const result = await account.functionCall({
-	// 				contractId,
-	// 				methodName: method,
-	// 				args: {},
-	// 				gas: '300000000000000' // Adjust gas as needed
-	// 			});
-	// 			console.log(`Call method ${method} result:`, result);
-	// 			toast({
-	// 				title: "Call Method Executed",
-	// 				description: `Method ${method} has been executed. Check console for results.`,
-	// 			});
-	// 		}
-	// 	} catch (error) {
-	// 		console.error(`Error executing method ${method}:`, error);
-	// 		toast({
-	// 			title: "Error",
-	// 			description: `Failed to execute method ${method}. Check console for details.`,
-	// 			variant: "destructive",
-	// 		});
-	// 	}
+	// const onGenerateKey = async () => {
+	// 	const options = {
+	// 		...newKeyOptions,
+	// 		allowance: newKeyOptions.allowance
+	// 			? BigInt(newKeyOptions.allowance) * BigInt(1e24)
+	// 			: null,
+	// 		methodNames: newKeyOptions.methodNames
+	// 			.split(",")
+	// 			.map((method) => method.trim()),
+	// 	};
+	// 	await handleGenerateKey(options);
 	// };
 
 	if (!signedAccountId) return <div>Please connect your wallet.</div>;
@@ -187,7 +112,39 @@ const KeysPage = () => {
 				{signedAccountId}
 			</h2>
 
+			<Card className="mb-4">
+				<CardHeader>
+					<CardTitle>Create New Account</CardTitle>
+					<CardDescription>
+						Create a new sub-account under your current account
+					</CardDescription>
+				</CardHeader>
+				<CardContent>
+					<div className="space-y-4">
+						<Input
+							placeholder="New Account Name"
+							value={newAccountName}
+							onChange={(e) => setNewAccountName(e.target.value)}
+						/>
+					</div>
+				</CardContent>
+				<CardFooter>
+					<Button onClick={() => handleCreateAccount(newAccountName)} className="w-full">
+						<Plus className="mr-2 h-4 w-4" /> Create Account
+					</Button>
+				</CardFooter>
+			</Card>
+
 			{loading ? (
+				<div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4">
+					{[...Array(3)].map((_, index) => (
+						<KeySkeleton key={index} />
+					))}
+				</div>
+			) : (
+				<div>{error}</div>
+			)}
+			{/* {loading ? (
 				<div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4">
 					{[...Array(3)].map((_, index) => (
 						<KeySkeleton key={index} />
@@ -240,8 +197,8 @@ const KeysPage = () => {
 												contractId: e.target.value,
 											}))
 										}
-                                            />
-									{/* <div className="space-y-2">
+									/>
+									<div className="space-y-2">
 										<Label>Select Methods</Label>
 										<div className="flex flex-wrap gap-2">
 											{availableMethods.map((method) => (
@@ -261,13 +218,13 @@ const KeysPage = () => {
 												</Button>
 											))}
 										</div>
-									</div> */}
+									</div>
 								</>
 							)}
 						</div>
 					</CardContent>
 					<CardFooter>
-						<Button onClick={handleGenerateKey} className="w-full">
+						<Button onClick={onGenerateKey} className="w-full">
 							<Plus className="mr-2 h-4 w-4" /> Generate Key
 						</Button>
 					</CardFooter>
@@ -339,7 +296,7 @@ const KeysPage = () => {
 													placeholder="View Methods"
 												/>
 											</SelectTrigger>
-											{/* <SelectContent>
+											<SelectContent>
 												{availableMethods && 
 												 availableMethods[key.access_key.permission.FunctionCall.receiver_id] ? (
 													availableMethods[key.access_key.permission.FunctionCall.receiver_id].map((method, methodIndex) => (
@@ -355,7 +312,7 @@ const KeysPage = () => {
 												) : (
 													<SelectItem value="no-methods">No methods available</SelectItem>
 												)}
-											</SelectContent> */}
+											</SelectContent>
 										</Select>
 									</>
 								)}
@@ -363,7 +320,7 @@ const KeysPage = () => {
 						</li>
 					))}
 				</div>
-			)}
+			)} */}
 		</div>
 	);
 };
